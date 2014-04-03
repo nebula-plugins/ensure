@@ -54,7 +54,7 @@ class EnsureGithub {
         Team ownerTeam = teams.find { it.name == orgOwnersTeamName }
 
         Team contribTeam = ensureOrgContribTeam(teams)
-        List<Repository> contribRepos = teamService.getRepositories(contribTeam.id)
+        List<Repository> contribRepos = contribTeam?teamService.getRepositories(contribTeam.id):[]
 
         def allRepositories = repoService.getOrgRepositories(orgName)
         List<Repository> repositories = matchRepositories(allRepositories)
@@ -66,9 +66,9 @@ class EnsureGithub {
             ensureRepoInContrib(contribTeam, contribRepos, repo)
         }
 
-        def leftoverRepos = allRepositories - repositories
+        def leftoverRepos = allRepositories.findAll { Repository allRepo -> !repositories.any { it.name == allRepo.name } }
         leftoverRepos.each {
-            logger.info("Unaccounted for repo: ${it.name}")
+            logger.info("Unaccounted for repo: ${it.name} (${it.private?'Private':'Public'})")
         }
 
         def leftoverTeams = teams - managedTeams - contribTeam - ownerTeam
@@ -79,10 +79,11 @@ class EnsureGithub {
         logger.info("Github rate: ${client.remainingRequests}/${client.requestLimit}")
     }
 
-    List<Repository> findRepositories() {
+    public List<Repository> findPublicRepositories() {
         def allRepositories = repoService.getOrgRepositories(orgName)
         List<Repository> repositories = matchRepositories(allRepositories)
-        return repositories
+        List<Repository> publicRepositories = repositories.findAll { !it.private }
+        return publicRepositories
     }
 
     List<Repository> matchRepositories(List<Repository> repositories) {
@@ -105,7 +106,7 @@ class EnsureGithub {
                 .setPermission(permission)
                 .setName(name)
         logger.info("Creating team $name")
-        logger.debug(GsonUtils.getGson().toJson(contribTeam))
+
         if (!dryRun) {
             return teamService.createTeam(orgName, contribTeam)
         } else {
@@ -123,13 +124,24 @@ class EnsureGithub {
 
         // Establish WebHooks. Make a single call to get list of hooks
         List<RepositoryHook> hooks = repoService.getHooksExtra(repo)
-        ensureHook(repo, hooks, PULL_REQUEST_URL, ['pull_request'] as String[])
-        ensureHook(repo, hooks, WEB_HOOK_URL, ['push'] as String[])
-        // TODO Report hooks which we didn't configure
+        def managedHooks = []
+        managedHooks << ensureHook(repo, hooks, PULL_REQUEST_URL, ['pull_request'] as String[])
+        managedHooks << ensureHook(repo, hooks, WEB_HOOK_URL, ['push'] as String[])
+
+        // Report hooks which we didn't configure
+        def leftoverHooks = hooks - managedHooks
+        leftoverHooks.findAll {it.active}.each { RepositoryHook hook ->
+            if (hook.config && hook.config.get('url') ) {
+                logger.info("Unaccounted for hook in ${repo.name}: ${hook.config.get('url')}")
+            } else {
+                logger.info("Unaccounted for hook in ${repo.name}: ${hook.name}")
+                logger.debug(GsonUtils.getGson().toJson(hook))
+            }
+        }
 
         // Establish teams
         def managedTeams = []
-        managedTeams << ensureRepoTeam(repo, teams, "${repo.name}-contrib", 'admin')
+        managedTeams << ensureRepoTeam(repo, teams, "${repo.name.toLowerCase()}-contrib", 'admin')
         //managedTeams << ensureRepoTeam(repo, teams, "${repo.name}-contrib", 'push')
         //ensureRepoTeam(teams, teamService, orgName, repo.name, "${repo.name}-admin", 'admin')
 
@@ -138,7 +150,7 @@ class EnsureGithub {
 
     def ensureHook(Repository repo, List<RepositoryHook> hooks, String hookUrl, String[] events) {
         def webHook = hooks.find { RepositoryHook hook ->
-            hook.config.get('url') == hookUrl
+            hook.config?.get('url') == hookUrl
         }
         if (!webHook) {
             webHook = new RepositoryHookExtra()
@@ -149,10 +161,9 @@ class EnsureGithub {
                     .setName('web')
                     .setUpdatedAt(new Date())
             logger.info("Creating hook for ${repo.name} to $hookUrl")
-            logger.debug(GsonUtils.getGson().toJson(webHook))
 
             if (!dryRun) {
-                repoService.createHook(repo, webHook)
+                webHook = repoService.createHook(repo, webHook)
             }
         } else {
             logger.debug("We have a hook for ${repo.name}: $hookUrl")
@@ -162,7 +173,7 @@ class EnsureGithub {
 
     // Create team for a single repository
     def ensureRepoTeam(Repository repository, List<Team> teams, String contribTeamName, String permission) {
-        def foundTeam = teams.find { Team team -> team.name == contribTeamName }
+        def foundTeam = teams.find { Team team -> team.name.toLowerCase() == contribTeamName }
         if (!foundTeam) {
             foundTeam = createTeam(contribTeamName, permission)
         } else {

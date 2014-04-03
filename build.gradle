@@ -23,23 +23,40 @@ dependencies {
 }
 
 // githubToken, bintrayUser, bintrayKey are from gradle.properties
-task('ensureNebula', type: JavaExec) {
-    main 'netflix.ensure.Cli'
-    classpath = sourceSets.main.runtimeClasspath
-    args '--org', 'nebula-plugins', '--repos', '.*-plugin$|nebula-(\\p{Lower}+)$', '--subject', 'nebula'
+task('ensureNetflix', type: JavaExec) {
+    args '--org', 'Netflix',
+            '--contrib', 'netflix-contrib',
+            '--repos', '.*',
+            '--subject', 'netflixoss',
+            '--repository', 'maven',
+            '--labels', 'netflix',
+            '--licenses', 'Apache-2.0'
+    args '--dryrun'
 }
 
-task('ensureTest', type: JavaExec) {
-    main 'netflix.ensure.Cli'
-    classpath = sourceSets.main.runtimeClasspath
-    args  '--org', 'nebula-plugins', '--repos', 'nebula-(\\p{Lower}+)$', '--subject', 'nebula',
+task('ensureNebula', type: JavaExec) {
+    args '--org', 'nebula-plugins',
+            '--repos', '.*-plugin$|nebula-(\\p{Lower}+)$',
+            '--subject', 'nebula',
             '--repository', 'gradle-plugins',
             '--labels', 'gradle,nebula',
             '--licenses', 'Apache-2.0'
-    debug = true
+    //args '--dryrun'
+    //debug true
 }
 
-tasks.withType(JavaExec) {
+task('ensureTest', type: JavaExec) { // Minimal set of repos
+    args  '--org', 'nebula-plugins',
+            '--repos', 'nebula-(\\p{Lower}+)$',
+            '--subject', 'nebula',
+            '--repository', 'gradle-plugins',
+            '--labels', 'gradle,nebula',
+            '--licenses', 'Apache-2.0'
+}
+
+tasks.withType(JavaExec).matching { it.name.contains('ensure') }.all {
+    main 'netflix.ensure.Cli'
+    classpath = sourceSets.main.runtimeClasspath
     args '--oauth', githubToken, '--username', bintrayUser, '--apikey', bintrayKey
 //    args '--dryrun'
 }

@@ -37,11 +37,14 @@ class Cli {
         EnsureGithub ensure = new EnsureGithub(dryRun, githubOauth, githubOrg, githubOrgContribName, repoPatterns)
         ensure.ensureOrg()
         // TODO Someway to ensure the users are in the correct groups, e.g. all netflix users in netflix-contrib
-        List<Repository> repos = ensure.findRepositories()
+        // TODO Only look at public repos
 
         // Bintray
+        List<Repository> repos = ensure.findPublicRepositories()
         EnsureBintray ensureBintray = new EnsureBintray(dryRun, bintrayUsername, bintrayApiKey, bintraySubject, bintrayRepository, bintrayLabels, bintrayLicenses)
         ensureBintray.ensure(repos)
+
+        // Cloudbees (job.dsl should take care of this)
     }
 
     public static void main(String[] args) {
@@ -55,7 +58,7 @@ class Cli {
         cliBuilder.h(longOpt: 'help', 'Help')
         cliBuilder.a(longOpt: 'oauth', args: 1, argName: 'token', 'GitHub OAuth Token')
         cliBuilder.o(longOpt: 'org', args: 1, argName: 'organization', 'GitHub Organization')
-        cliBuilder.c(longOpt: 'contribTeam', args: 1, argName: 'team name', 'Team name that all repos should belong to')
+        cliBuilder.c(longOpt: 'contrib', args: 1, argName: 'team name', 'Team name that all repos should belong to')
         cliBuilder.r(longOpt: 'repos', args: 1, argName: 'repo', 'Regular expression for applicable repositories')
 
         // Bintray
@@ -77,7 +80,7 @@ class Cli {
         }
 
         Cli cli = new Cli(
-                options.repos, options.oauth, options.org, options.contribTeam?:'contrib', // Github
+                options.repos, options.oauth, options.org, (options.contrib?:'contrib'), // Github
                 options.username, options.apikey, options.subject, options.repository, // Bintray
                 options.labels ? options.labels.tokenize(',') : [],
                 options.licenses ? options.licenses.tokenize(',') : [] )
