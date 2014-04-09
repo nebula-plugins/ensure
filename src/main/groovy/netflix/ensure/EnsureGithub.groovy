@@ -1,5 +1,7 @@
 package netflix.ensure
 
+import groovy.transform.Canonical
+import groovyx.net.http.HTTPBuilder
 import netflix.ensure.githubextra.RepositoryHookExtra
 import netflix.ensure.githubextra.RepositoryServiceExtra
 import org.eclipse.egit.github.core.Repository
@@ -11,6 +13,7 @@ import org.eclipse.egit.github.core.service.TeamService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.security.MessageDigest
 import java.util.regex.Pattern
 
 /**
@@ -48,13 +51,85 @@ class EnsureGithub {
         teamService = new TeamService(client)
     }
 
+    def ensureRepo(String repoName, String repoDescription) {
+        logger.info("Ensuring repo ${repoName}")
+
+        // Avoid an exception which we'd get if repo didn't exist, but getting all the repos and filtering the list down
+        def allRepositories = repoService.getOrgRepositories(orgName)
+        Repository repo = allRepositories.find { it.name == repoName }
+
+        if (!repo) {
+            // Need to create
+            Repository newRepo = new Repository().setName(repoName)
+            if (repoDescription) {
+                newRepo.setDescription(repoDescription)
+            }
+            // TBD .setPrivate()
+
+            logger.info("Creating repo ${repoName}")
+            if (!dryRun) {
+                // Make sure we're creating repos that match our pattern
+                assert matchRepository(repo), "Repository name $repoName does not match the repository patterns"
+                repo = repoService.createRepository(orgName, newRepo)
+                pokeCloudbees()
+            }
+        } else {
+            // Confirm description is correct
+            if (repo.description != repoDescription) {
+                repo.setDescription(repoDescription)
+                logger.info("Updating description on ${repoName}")
+                if (!dryRun) {
+                    repoService.editRepository(repo)
+                }
+            }
+        }
+
+        List<Team> teams = teamService.getTeams(orgName)
+        ensureRepo(repo, teams)
+        def contrib = gatherContrib(teams)
+        ensureRepoInContrib(contrib, repo)
+    }
+
+    /**
+     * Poke CloudBees Job DSL SEED job
+     */
+    private void pokeCloudbees() {
+        // JENKINS_URL/view/Nebula%20Plugins/job/nebula-plugins/job/SEED-nebula-plugins/build?token=TOKEN_NAME or /buildWithParameters?token=TOKEN_NAME
+        // TODO Make sure configurable
+        def seedJobName = 'SEED-nebula-plugins'
+        logger.info("Poking cloudbees for ${seedJobName}")
+
+        def seedJobHash = hashJobName(seedJobName)
+
+        def http = new HTTPBuilder('https://netflixoss.ci.cloudbees.com')
+        def html = http.post(path: "/job/$orgName/job/$seedJobName/build", query: [token: seedJobHash, delay: "0sec"])
+    }
+
+    String hashJobName(String seedJobName) {
+        def cript = MessageDigest.getInstance("SHA1")
+        cript.reset();
+        cript.update(seedJobName.getBytes("utf8"))
+        return new BigInteger(1, cript.digest()).toString(16)
+    }
+
+    @Canonical
+    static class Contrib {
+        Team team
+        List<Repository> repos
+    }
+
+    Contrib gatherContrib(List<Team> teams) {
+        Team contribTeam = ensureOrgContribTeam(teams)
+        List<Repository> contribRepos = contribTeam?teamService.getRepositories(contribTeam.id):[]
+        return new Contrib(contribTeam, contribRepos)
+    }
+
     def ensureOrg() {
         logger.info("Ensuring organization ${orgName}")
         List<Team> teams = teamService.getTeams(orgName)
         Team ownerTeam = teams.find { it.name == orgOwnersTeamName }
 
-        Team contribTeam = ensureOrgContribTeam(teams)
-        List<Repository> contribRepos = contribTeam?teamService.getRepositories(contribTeam.id):[]
+        Contrib contrib = gatherContrib(teams)
 
         def allRepositories = repoService.getOrgRepositories(orgName)
         List<Repository> repositories = matchRepositories(allRepositories)
@@ -63,7 +138,7 @@ class EnsureGithub {
             logger.info("Visiting ${repo.name}")
             managedTeams.addAll ensureRepo(repo, teams)
 
-            ensureRepoInContrib(contribTeam, contribRepos, repo)
+            ensureRepoInContrib(contrib, repo)
         }
 
         def leftoverRepos = allRepositories.findAll { Repository allRepo -> !repositories.any { it.name == allRepo.name } }
@@ -71,7 +146,7 @@ class EnsureGithub {
             logger.info("Unaccounted for repo: ${it.name} (${it.private?'Private':'Public'})")
         }
 
-        def leftoverTeams = teams - managedTeams - contribTeam - ownerTeam
+        def leftoverTeams = teams - managedTeams - team - ownerTeam
         leftoverTeams.each {
             logger.info("Unaccounted for team: ${it.name}")
         }
@@ -87,9 +162,13 @@ class EnsureGithub {
     }
 
     List<Repository> matchRepositories(List<Repository> repositories) {
-        repositories.findAll { repo ->
-            repoRegexs.isEmpty() || repoRegexs.any { repo.name =~ it }
+        repositories.findAll { Repository repo ->
+            matchRepository(repo)
         }
+    }
+
+    private boolean matchRepository(repo) {
+        repoRegexs.isEmpty() || repoRegexs.any { repo.name =~ it }
     }
 
     Team ensureOrgContribTeam(List<Team> teams) {
@@ -194,16 +273,16 @@ class EnsureGithub {
     }
 
     // Ensure this repo is in the org-wide "contrib"
-    def ensureRepoInContrib(Team contribTeam, List<Repository> contribRepos, Repository repo) {
-        def foundRepo = contribRepos.find { Repository contribRepo ->  contribRepo.name == repo.name }
+    def ensureRepoInContrib(Contrib contrib, Repository repo) {
+        def foundRepo = contrib.repos.find { Repository contribRepo ->  contribRepo.name == repo.name }
         if (!foundRepo) {
             // Add repo to team
-            logger.info("Adding repository ${repo.name} to contrib team ${contribTeam.name}")
+            logger.info("Adding repository ${repo.name} to contrib team ${contrib.team.name}")
             if (!dryRun) {
-                teamService.addRepository(contribTeam.id, repo)
+                teamService.addRepository(contrib.team.id, repo)
             }
         } else {
-            logger.debug("Repository (${repo.name}) is in contrib team (${contribTeam.name})")
+            logger.debug("Repository (${repo.name}) is in contrib team (${contrib.team.name})")
         }
     }
 }
