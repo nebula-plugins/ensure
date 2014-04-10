@@ -8,7 +8,7 @@ function getPropertyFromFile()
   cat $fileName | sed -n -e "s/^[ ]*//g;/^#/d;s/^$propertyName=//p" | tail -1
 }
 
-GITHUB_OAUTH=`getPropertyFromFile github.oauth ~/Projects/scratch/nebula-plugin-keys/cloudbees/github/netflixoss.properties`
+GITHUB_OAUTH=`getPropertyFromFile github.oauth $GITHUB_PROPERTIES`
 
 cd $Repository
 git init
