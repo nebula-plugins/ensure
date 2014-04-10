@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+
 function getPropertyFromFile()
 {
   # substitute “.” with “\.” so that we can use it as sed expression
