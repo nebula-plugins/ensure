@@ -146,7 +146,7 @@ class EnsureGithub {
             logger.info("Unaccounted for repo: ${it.name} (${it.private?'Private':'Public'})")
         }
 
-        def leftoverTeams = teams - managedTeams - team - ownerTeam
+        def leftoverTeams = teams - managedTeams - contrib.team - ownerTeam
         leftoverTeams.each {
             logger.info("Unaccounted for team: ${it.name}")
         }

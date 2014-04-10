@@ -36,7 +36,7 @@ task('ensureNetflix', type: JavaExec) {
 
 task('ensureNebula', type: JavaExec) {
     args '--org', 'nebula-plugins',
-            '--repos', 'gradle-.*-plugin$|nebula-(\\p{Lower}+)$',
+            '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
             '--subject', 'nebula',
             '--repository', 'gradle-plugins',
             '--labels', 'gradle,nebula',
@@ -64,7 +64,7 @@ task('ensureNebulaRepo', type: JavaExec) {
         }
     }
     args '--org', 'nebula-plugins',
-            '--repos', 'gradle-.*-plugin$,nebula-(\\p{Lower}+)$',
+            '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
             '--subject', 'nebula',
             '--repository', 'gradle-plugins',
             '--labels', 'gradle,nebula',
