@@ -16,6 +16,6 @@ git add .
 git add -f gradle/wrapper/gradle-wrapper.jar
 git commit -m "Initial template"
 git remote add origin https://${GITHUB_OAUTH}:x-oauth-basic@github.com/nebula-plugins/$Repository
-git push origin master
+git push --quiet origin master
 
 cd ..
