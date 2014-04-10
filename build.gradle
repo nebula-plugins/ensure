@@ -81,9 +81,3 @@ tasks.withType(JavaExec).matching { it.name.contains('ensure') }.all {
     }
     //debug true
 }
-
-//task('ensureNetflix', type: JavaExec) {
-//    main 'netflix.ensure.Cli'
-//    classpath = sourceSets.main.runtimeClasspath
-//    args '--org', 'Netflix', '--contrib', 'netflix-contrib', '--repos', 'nebula-(\\p{Lower}+)$', '--subject', 'Netflix'
-//}

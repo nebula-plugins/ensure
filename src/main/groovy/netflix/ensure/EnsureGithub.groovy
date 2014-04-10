@@ -69,7 +69,7 @@ class EnsureGithub {
             logger.info("Creating repo ${repoName}")
             if (!dryRun) {
                 // Make sure we're creating repos that match our pattern
-                assert matchRepository(repo), "Repository name $repoName does not match the repository patterns"
+                assert matchRepository(newRepo), "Repository name $repoName does not match the repository patterns"
                 repo = repoService.createRepository(orgName, newRepo)
                 pokeCloudbees()
             }
