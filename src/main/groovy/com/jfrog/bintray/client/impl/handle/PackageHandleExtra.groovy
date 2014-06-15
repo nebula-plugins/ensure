@@ -3,6 +3,7 @@ package com.jfrog.bintray.client.impl.handle
 import com.jfrog.bintray.client.api.details.PackageDetails
 import com.jfrog.bintray.client.api.details.PackageDetailsExtra
 import com.jfrog.bintray.client.api.handle.PackageHandle
+import com.jfrog.bintray.client.api.model.Pkg
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import org.apache.http.client.methods.HttpPatch
@@ -12,6 +13,7 @@ class PackageHandleExtra extends PackageHandleImpl {
     private BintrayImpl bintrayHandle
     private RepositoryHandleImpl repositoryHandle
     private String name
+    private Pkg pkg
 
     // For Mocking
     PackageHandleExtra() {
@@ -24,15 +26,24 @@ class PackageHandleExtra extends PackageHandleImpl {
         this.bintrayHandle = impl.bintrayHandle
         this.repositoryHandle = impl.repositoryHandle
         this.name = impl.name
+        this.pkg = impl.get()
     }
 
 
     @Override
     PackageHandle update(PackageDetails packageBuilder) {
-        def requestBody = [desc: packageBuilder.description, labels: packageBuilder.labels,
+        def allLabels = pkg.labels()
+        packageBuilder.labels.each {
+            if (!allLabels.contains(it)) {
+                allLabels.add(it)
+            }
+        }
+        def requestBody = [desc: packageBuilder.description, labels: allLabels,
                 licenses: packageBuilder.licenses]
         if (packageBuilder instanceof PackageDetailsExtra) {
             requestBody['vcs_url'] = packageBuilder.vcsUrl
+            requestBody['website'] = packageBuilder.website
+            requestBody['issue_tracker'] = packageBuilder.issueTracker
         }
 
 

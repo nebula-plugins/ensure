@@ -32,6 +32,8 @@ class EnsureBintray {
     String apiKey
     String subject
     String repository
+    String website
+    String issueTracker
     List<String> labels
     List<String> licenses
 
@@ -46,6 +48,8 @@ class EnsureBintray {
         this.apiKey = apiKey
         this.subject = subject
         this.repository = repository
+        this.website = "http://github.com/nebula-plugins/${this.repository}".toString()
+        this.issueTracker = "${this.website}/issues".toString()
         this.labels = labels
         this.licenses = licenses
 
@@ -89,7 +93,7 @@ class EnsureBintray {
             handle = repositoryHandle.pkg(repo.name)
             Pkg pkg = handle.get()
             logger.debug("Inspecting package ${pkg.name()}")
-            if ( pkg.description() != repo.description || !pkg.labels().equals(labels) ) {
+            if ( pkg.description() != repo.description || !pkg.labels().containsAll(labels) ) {
                 logger.info("Updating ${pkg.name()}")
                 // Ridiculous way to get a handle when we have the real object
                 if (!dryRun) {
@@ -103,7 +107,7 @@ class EnsureBintray {
     }
 
     PackageDetails packageFromRepo(Repository repo) {
-        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).description(repo.description).labels(labels).licenses(licenses)
+        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).description(repo.description).labels(labels).licenses(licenses).website(website).issueTracker(issueTracker)
         ideal
     }
 }

@@ -15,7 +15,9 @@ package com.jfrog.bintray.client.api.details
  "latest_version": "1.2.5",
  "updated": "ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)",
  "linked_to_repo": "the repo this package was linked to (relevant to search results)"
- "vcs_url": "https://github.com/bintray/bintray-client-java.git"
+ "vcs_url": "https://github.com/bintray/bintray-client-java.git",
+ "website": "https://github.com/bintray/bintray-client-java",
+ "issue_tracker": "https://github.com/bintray/bintray-client-java/issues"
  }
 
  I can't find the API for website, issue tracker, Github repo, Github release notes file, how to make the download numbers public
@@ -23,6 +25,8 @@ package com.jfrog.bintray.client.api.details
 public class PackageDetailsExtra extends PackageDetails {
 
     String vcsUrl
+    String website
+    String issueTracker
 
     PackageDetailsExtra(String name) {
         super(name)
@@ -32,6 +36,18 @@ public class PackageDetailsExtra extends PackageDetails {
         this.vcsUrl = vcsUrl
 
         return this
+    }
+
+    PackageDetailsExtra website(String website) {
+        this.website = website
+
+        this
+    }
+
+    PackageDetailsExtra issueTracker(String issueTracker) {
+        this.issueTracker = issueTracker
+
+        this
     }
 
     public String getName() {

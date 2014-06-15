@@ -27,6 +27,8 @@ class RepositoryHandleExtra extends RepositoryHandleImpl {
                 licenses: packageDetails.licenses]
         if (packageDetails instanceof PackageDetailsExtra) {
             requestBody['vcs_url'] = packageDetails.vcsUrl
+            requestBody['website'] = packageDetails.website
+            requestBody['issueTracker'] = packageDetails.issueTracker
         }
         bintrayHandle.post("packages/${this.owner().name()}/${this.name()}", requestBody)
         new PackageHandleImpl(bintrayHandle, this, packageDetails.name)
