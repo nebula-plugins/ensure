@@ -27,6 +27,8 @@ public class PackageDetailsExtra extends PackageDetails {
     String vcsUrl
     String website
     String issueTracker
+    String githubRepo
+    String githubReleaseNotes
 
     PackageDetailsExtra(String name) {
         super(name)
@@ -46,6 +48,18 @@ public class PackageDetailsExtra extends PackageDetails {
 
     PackageDetailsExtra issueTracker(String issueTracker) {
         this.issueTracker = issueTracker
+
+        this
+    }
+
+    PackageDetailsExtra githubRepo(String repo) {
+        this.githubRepo = repo
+
+        this
+    }
+
+    PackageDetailsExtra githubReleaseNotes(String releaseNotes) {
+        this.githubReleaseNotes = releaseNotes
 
         this
     }

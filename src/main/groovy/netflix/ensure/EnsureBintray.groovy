@@ -34,6 +34,8 @@ class EnsureBintray {
     String repository
     String website
     String issueTracker
+    String githubRepo
+    String githubReleaseNotes = 'CHANGELOG.md'
     List<String> labels
     List<String> licenses
 
@@ -48,8 +50,10 @@ class EnsureBintray {
         this.apiKey = apiKey
         this.subject = subject
         this.repository = repository
-        this.website = "http://github.com/nebula-plugins/${this.repository}".toString()
+        this.githubRepo = "nebula-plugins/${this.repository}".toString()
+        this.website = "http://github.com/${this.githubRepo}".toString()
         this.issueTracker = "${this.website}/issues".toString()
+
         this.labels = labels
         this.licenses = licenses
 
@@ -107,7 +111,8 @@ class EnsureBintray {
     }
 
     PackageDetails packageFromRepo(Repository repo) {
-        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).description(repo.description).labels(labels).licenses(licenses).website(website).issueTracker(issueTracker)
+        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).website(website).issueTracker(issueTracker).githubRepo(githubRepo)
+                .githubReleaseNotes(githubReleaseNotes).description(repo.description).labels(labels).licenses(licenses)
         ideal
     }
 }

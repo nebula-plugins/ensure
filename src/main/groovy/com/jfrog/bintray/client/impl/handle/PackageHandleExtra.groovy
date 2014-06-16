@@ -47,9 +47,23 @@ class PackageHandleExtra extends PackageHandleImpl {
         }
 
 
+        def commonPath = "${repositoryHandle.owner().name()}/${repositoryHandle.name()}/$name"
         // Instead of calling bintrayHandle.patch in PackageHandle.update
-        def path = "packages/${repositoryHandle.owner().name()}/${repositoryHandle.name()}/$name"
-        bintrayHandle.restClient.patch([path: path, body: requestBody]);
+        def path = "packages/$commonPath"
+        bintrayHandle.restClient.patch([path: path, body: requestBody])
+
+        // set attributes
+        def attributePath = "/packages/$commonPath/attributes"
+        def attributeBody = [public_download_numbers: true]
+        if (packageBuilder instanceof PackageDetailsExtra) {
+            attributeBody['website'] = packageBuilder.website
+            attributeBody['issue_tracker'] = packageBuilder.issueTracker
+            attributeBody['vcs_url'] = packageBuilder.vcsUrl
+            attributeBody['github_repo'] = packageBuilder.githubRepo
+            attributeBody['github_release_notes'] = packageBuilder.githubReleaseNotes
+
+        }
+        bintrayHandle.restClient.patch([path: attributePath, body: attributeBody])
 
         this
     }
