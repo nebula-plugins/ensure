@@ -22,12 +22,16 @@ dependencies {
     testCompile 'cglib:cglib-nodep:2.2.2' // For Mocking classes with Spock
 }
 
-task('ensureNebula', type: EnsureTask) {
+task('ensure', type: EnsureTask) {
     //args '--dryrun'
     //debug true
 }
 
-task('ensureNebulaRepo', type: EnsureTask) {
+task('ensureDry', type: EnsureTask) {
+    args '--dryrun'
+}
+
+task('ensureRepo', type: EnsureTask) {
     doFirst {
         // Look for project property of repo
         assert project.hasProperty('repo')
@@ -42,14 +46,16 @@ task('ensureNebulaRepo', type: EnsureTask) {
 class EnsureTask extends JavaExec {}
 
 tasks.withType(EnsureTask) {
+    doFirst {
+        def ensureConfigFile = new File(project.ensureConfig)
+        if (!ensureConfigFile.exists()) {
+            throw new RuntimeException("${project.ensureConfig} does not exist")
+        }
+    }
     main 'netflix.ensure.Cli'
     classpath = sourceSets.main.runtimeClasspath
     if (!project.hasProperty('ensureConfig')) {
         throw new RuntimeException('You must set `-PensureConfig=<filename>`')
-    }
-    def ensureConfigFile = project.file(project.ensureConfig)
-    if (!ensureConfigFile.exists()) {
-        throw new RuntimeException("${project.ensureConfig} does not exist")
     }
 
     args '--configFile', project.ensureConfig
