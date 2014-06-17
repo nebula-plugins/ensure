@@ -71,6 +71,8 @@ class Cli {
 
         cliBuilder.h(longOpt: 'help', 'Help')
         cliBuilder.f(longOpt: 'configFile', args: 1, argName: 'configFileName', 'Config file')
+        cliBuilder._(longOpt: 'repo', args: 1, argName: 'repository name', 'Name of repository to ensure')
+        cliBuilder._(longOpt: 'description', args: 1, argName: 'licenses', 'Description of repository to ensure')
 
         cliBuilder.d(longOpt: 'dryrun', 'Only log operations')
 
@@ -100,7 +102,7 @@ class Cli {
             repoPattern = props.get('repoPattern')
 
             // Github
-            githubOauth = props.get('githubOauth')
+            githubOauth = props.get('githubToken')
             githubOrg = props.get('githubOrg')
             githubOrgContribName = (props.get('githubOrgContribName')?:'contrib')
 
@@ -114,8 +116,8 @@ class Cli {
         }
 
         if (options.ensureRepo) {
-            def repoName = props.get('repoName')
-            def description = props.get('description')
+            def repoName = options.repo
+            def description = options.description
             cli.ensureRepo(repoName, description)
         } else {
             // Assume ensureOrg which doesn't exist on command line

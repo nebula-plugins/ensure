@@ -34,46 +34,23 @@ task('ensureNetflix', type: JavaExec) {
     args '--dryrun'
 }
 
-task('ensureNebula', type: JavaExec) {
-    args '--org', 'nebula-plugins',
-            '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
-            '--subject', 'nebula',
-            '--repository', 'gradle-plugins',
-            '--labels', 'gradle,nebula',
-            '--licenses', 'Apache-2.0'
+task('ensureNebula', type: EnsureTask) {
     //args '--dryrun'
     //debug true
 }
 
-task('ensureTest', type: JavaExec) { // Minimal set of repos
-    args  '--org', 'nebula-plugins',
-            '--repos', 'nebula-(\\p{Lower}+)$',
-            '--subject', 'nebula',
-            '--repository', 'gradle-plugins',
-            '--labels', 'gradle,nebula',
-            '--licenses', 'Apache-2.0'
-}
-
-task('ensureNebulaRepo', type: JavaExec) {
-    doFirst {
-        // Look for project property of repo
-        assert project.hasProperty('repo')
-        args '--repo', project.repo
-        if (project.hasProperty('description') && project.description) {
-            args '--description', project.description
-        }
-        if (project.hasProperty())
+task('ensureNebulaRepo', type: EnsureTask) {
+    // Look for project property of repo
+    assert project.hasProperty('repo')
+    args '--ensureRepo', '--repo', project.repo
+    if (project.hasProperty('description') && project.description) {
+        args '--description', project.description
     }
-    args '--org', 'nebula-plugins',
-            '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
-            '--subject', 'nebula',
-            '--repository', 'gradle-plugins',
-            '--labels', 'gradle,nebula',
-            '--licenses', 'Apache-2.0',
-            '--ensureRepo'
 }
 
-task ensure(type: JavaExec) {
+class EnsureTask extends JavaExec {}
+
+tasks.withType(EnsureTask) {
     main 'netflix.ensure.Cli'
     classpath = sourceSets.main.runtimeClasspath
     if (!project.hasProperty('ensureConfig')) {
