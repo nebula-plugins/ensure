@@ -4,10 +4,6 @@ import com.jfrog.bintray.client.api.details.PackageDetails
 import com.jfrog.bintray.client.api.details.PackageDetailsExtra
 import com.jfrog.bintray.client.api.handle.PackageHandle
 import com.jfrog.bintray.client.api.model.Pkg
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.Method
-import org.apache.http.client.methods.HttpPatch
-import org.apache.http.client.methods.HttpRequestBase
 
 class PackageHandleExtra extends PackageHandleImpl {
     private BintrayImpl bintrayHandle
