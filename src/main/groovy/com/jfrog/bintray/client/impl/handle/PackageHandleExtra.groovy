@@ -50,14 +50,14 @@ class PackageHandleExtra extends PackageHandleImpl {
 
         // set attributes
         def attributePath = "/packages/$commonPath/attributes"
-        def attributeBody = [public_download_numbers: true]
-        if (packageBuilder instanceof PackageDetailsExtra) {
-            attributeBody['website'] = packageBuilder.website
-            attributeBody['issue_tracker'] = packageBuilder.issueTracker
-            attributeBody['vcs_url'] = packageBuilder.vcsUrl
-            attributeBody['github_repo'] = packageBuilder.githubRepo
-            attributeBody['github_release_notes'] = packageBuilder.githubReleaseNotes
 
+        def attributeBody = [[name: 'public_download_numbers', values: [true], type: 'boolean']]
+        if (packageBuilder instanceof PackageDetailsExtra) {
+            attributeBody << [name: 'website', values: [packageBuilder.website], type: 'string']
+            attributeBody << [name: 'issue_tracker', values: [packageBuilder.issueTracker], type: 'string']
+            attributeBody << [name: 'vcs_url', values: [packageBuilder.vcsUrl], type: 'string']
+            attributeBody << [name: 'github_repo', values: [packageBuilder.githubRepo], type: 'string']
+            attributeBody << [name: 'github_release_notes', values: [packageBuilder.githubReleaseNotes], type: 'string']
         }
         bintrayHandle.restClient.patch([path: attributePath, body: attributeBody])
 
