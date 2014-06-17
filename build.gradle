@@ -62,6 +62,7 @@ task('ensureNebulaRepo', type: JavaExec) {
         if (project.hasProperty('description') && project.description) {
             args '--description', project.description
         }
+        if (project.hasProperty())
     }
     args '--org', 'nebula-plugins',
             '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
@@ -72,12 +73,19 @@ task('ensureNebulaRepo', type: JavaExec) {
             '--ensureRepo'
 }
 
-tasks.withType(JavaExec).matching { it.name.contains('ensure') }.all {
+task ensure(type: JavaExec) {
     main 'netflix.ensure.Cli'
     classpath = sourceSets.main.runtimeClasspath
-    args '--oauth', githubToken, '--username', bintrayUser, '--apikey', bintrayKey
+    if (!project.hasProperty('ensureConfig')) {
+        throw new RuntimeException('You must set `-PensureConfig=<filename>`')
+    }
+    def ensureConfigFile = project.file(project.ensureConfig)
+    if (!ensureConfigFile.exists()) {
+        throw new RuntimeException("${project.ensureConfig} does not exist")
+    }
+
+    args '--configFile', project.ensureConfig
     if (project.hasProperty('dryRun')) {
         args '--dryrun'
     }
-    //debug true
 }
