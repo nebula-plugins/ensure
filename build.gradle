@@ -47,6 +47,9 @@ class EnsureTask extends JavaExec {}
 
 tasks.withType(EnsureTask) {
     doFirst {
+        if (!project.hasProperty('ensureConfig')) {
+            throw new RuntimeException('You must set `-PensureConfig=<filename>`')
+        }
         def ensureConfigFile = new File(project.ensureConfig)
         if (!ensureConfigFile.exists()) {
             throw new RuntimeException("${project.ensureConfig} does not exist")
@@ -54,9 +57,6 @@ tasks.withType(EnsureTask) {
     }
     main 'netflix.ensure.Cli'
     classpath = sourceSets.main.runtimeClasspath
-    if (!project.hasProperty('ensureConfig')) {
-        throw new RuntimeException('You must set `-PensureConfig=<filename>`')
-    }
 
     args '--configFile', project.ensureConfig
     if (project.hasProperty('dryRun')) {
