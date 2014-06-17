@@ -22,62 +22,35 @@ dependencies {
     testCompile 'cglib:cglib-nodep:2.2.2' // For Mocking classes with Spock
 }
 
-// githubToken, bintrayUser, bintrayKey are from gradle.properties
-task('ensureNetflix', type: JavaExec) {
-    args '--org', 'Netflix',
-            '--contrib', 'netflix-contrib',
-            '--repos', '.*',
-            '--subject', 'netflixoss',
-            '--repository', 'maven',
-            '--labels', 'netflix',
-            '--licenses', 'Apache-2.0'
-    args '--dryrun'
-}
-
-task('ensureNebula', type: JavaExec) {
-    args '--org', 'nebula-plugins',
-            '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
-            '--subject', 'nebula',
-            '--repository', 'gradle-plugins',
-            '--labels', 'gradle,nebula',
-            '--licenses', 'Apache-2.0'
+task('ensureNebula', type: EnsureTask) {
     //args '--dryrun'
     //debug true
 }
 
-task('ensureTest', type: JavaExec) { // Minimal set of repos
-    args  '--org', 'nebula-plugins',
-            '--repos', 'nebula-(\\p{Lower}+)$',
-            '--subject', 'nebula',
-            '--repository', 'gradle-plugins',
-            '--labels', 'gradle,nebula',
-            '--licenses', 'Apache-2.0'
-}
-
-task('ensureNebulaRepo', type: JavaExec) {
-    doFirst {
-        // Look for project property of repo
-        assert project.hasProperty('repo')
-        args '--repo', project.repo
-        if (project.hasProperty('description') && project.description) {
-            args '--description', project.description
-        }
+task('ensureNebulaRepo', type: EnsureTask) {
+    // Look for project property of repo
+    assert project.hasProperty('repo')
+    args '--ensureRepo', '--repo', project.repo
+    if (project.hasProperty('description') && project.description) {
+        args '--description', project.description
     }
-    args '--org', 'nebula-plugins',
-            '--repos', 'gradle-.*-plugin$,nebula-.*-plugin$,nebula-(\\p{Lower}+)$',
-            '--subject', 'nebula',
-            '--repository', 'gradle-plugins',
-            '--labels', 'gradle,nebula',
-            '--licenses', 'Apache-2.0',
-            '--ensureRepo'
 }
 
-tasks.withType(JavaExec).matching { it.name.contains('ensure') }.all {
+class EnsureTask extends JavaExec {}
+
+tasks.withType(EnsureTask) {
     main 'netflix.ensure.Cli'
     classpath = sourceSets.main.runtimeClasspath
-    args '--oauth', githubToken, '--username', bintrayUser, '--apikey', bintrayKey
+    if (!project.hasProperty('ensureConfig')) {
+        throw new RuntimeException('You must set `-PensureConfig=<filename>`')
+    }
+    def ensureConfigFile = project.file(project.ensureConfig)
+    if (!ensureConfigFile.exists()) {
+        throw new RuntimeException("${project.ensureConfig} does not exist")
+    }
+
+    args '--configFile', project.ensureConfig
     if (project.hasProperty('dryRun')) {
         args '--dryrun'
     }
-    //debug true
 }

@@ -13,6 +13,8 @@ import java.util.regex.Pattern
 class Cli {
     final static Logger logger = LoggerFactory.getLogger(Cli.class);
 
+    String configFileName
+
     String repoPattern
 
     String githubOauth
@@ -68,20 +70,9 @@ class Cli {
         def cliBuilder = new CliBuilder(usage:'ensure [options] [targets]', header:'Options:')
 
         cliBuilder.h(longOpt: 'help', 'Help')
-        cliBuilder.a(longOpt: 'oauth', args: 1, argName: 'token', 'GitHub OAuth Token')
-        cliBuilder.o(longOpt: 'org', args: 1, argName: 'organization', 'GitHub Organization')
-        cliBuilder.c(longOpt: 'contrib', args: 1, argName: 'team name', 'Team name that all repos should belong to')
-        cliBuilder.r(longOpt: 'repos', args: 1, argName: 'repo', 'Regular expression for applicable repositories')
+        cliBuilder.f(longOpt: 'configFile', args: 1, argName: 'configFileName', 'Config file')
         cliBuilder._(longOpt: 'repo', args: 1, argName: 'repository name', 'Name of repository to ensure')
         cliBuilder._(longOpt: 'description', args: 1, argName: 'licenses', 'Description of repository to ensure')
-
-        // Bintray
-        cliBuilder.u(longOpt: 'username', args: 1, argName: 'username', 'Bintray Username')
-        cliBuilder.k(longOpt: 'apikey', args: 1, argName: 'key', 'Bintray Api Key')
-        cliBuilder.s(longOpt: 'subject', args: 1, argName: 'subject', 'Bintray Subject')
-        cliBuilder.t(longOpt: 'repository', args: 1, argName: 'reponame', 'Bintray Repository')
-        cliBuilder.b(longOpt: 'labels', args: 1, argName: 'labels', 'Bintray labels to have on packages')
-        cliBuilder.l(longOpt: 'licenses', args: 1, argName: 'licenses', 'Bintray licenses to have on packages')
 
         cliBuilder.d(longOpt: 'dryrun', 'Only log operations')
 
@@ -97,27 +88,31 @@ class Cli {
         }
 
         Cli cli = new Cli()
+        Properties props = new Properties()
         cli.with {
 
             dryRun = (options.dryrun) as Boolean
             if (dryRun) {
                 logger.warn("Running in DRY RUN mode")
             }
+            configFileName = options.configFileName
 
-            repoPattern = options.repos
+            props = props.load(new File(configFileName).newDataInputStream())
+
+            repoPattern = props.get('repoPattern')
 
             // Github
-            githubOauth = options.oauth
-            githubOrg = options.org
-            githubOrgContribName = (options.contrib?:'contrib')
+            githubOauth = props.get('githubToken')
+            githubOrg = props.get('githubOrg')
+            githubOrgContribName = (props.get('githubOrgContribName')?:'contrib')
 
             // Bintray
-            bintrayUsername = options.username
-            bintrayApiKey = options.apikey
-            bintraySubject = options.subject
-            bintrayRepository = options.repository
-            bintrayLabels = options.labels ? options.labels.tokenize(',') : []
-            bintrayLicenses = options.licenses ? options.licenses.tokenize(',') : []
+            bintrayUsername = props.get('bintrayUsername')
+            bintrayApiKey = props.get('bintrayApiKey')
+            bintraySubject = props.get('bintraySubject')
+            bintrayRepository = props.get('bintrayRepository')
+            bintrayLabels = props.get('bintrayLabels') ? props.get('bintrayLabels').tokenize(',') : []
+            bintrayLicenses = props.get('bintrayLicenses') ? props.get('bintrayLicenses').tokenize(',') : []
         }
 
         if (options.ensureRepo) {
