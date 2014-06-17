@@ -107,8 +107,8 @@ class Cli {
             githubOrgContribName = (props.get('githubOrgContribName')?:'contrib')
 
             // Bintray
-            bintrayUsername = props.get('bintrayUsername')
-            bintrayApiKey = props.get('bintrayApiKey')
+            bintrayUsername = props.get('bintrayUser')
+            bintrayApiKey = props.get('bintrayKey')
             bintraySubject = props.get('bintraySubject')
             bintrayRepository = props.get('bintrayRepository')
             bintrayLabels = props.get('bintrayLabels') ? props.get('bintrayLabels').tokenize(',') : []
