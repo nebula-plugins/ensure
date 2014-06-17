@@ -22,18 +22,6 @@ dependencies {
     testCompile 'cglib:cglib-nodep:2.2.2' // For Mocking classes with Spock
 }
 
-// githubToken, bintrayUser, bintrayKey are from gradle.properties
-task('ensureNetflix', type: JavaExec) {
-    args '--org', 'Netflix',
-            '--contrib', 'netflix-contrib',
-            '--repos', '.*',
-            '--subject', 'netflixoss',
-            '--repository', 'maven',
-            '--labels', 'netflix',
-            '--licenses', 'Apache-2.0'
-    args '--dryrun'
-}
-
 task('ensureNebula', type: EnsureTask) {
     //args '--dryrun'
     //debug true
