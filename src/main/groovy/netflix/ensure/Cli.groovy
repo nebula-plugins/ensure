@@ -72,7 +72,7 @@ class Cli {
         cliBuilder.h(longOpt: 'help', 'Help')
         cliBuilder.f(longOpt: 'configFile', args: 1, argName: 'configFileName', 'Config file')
         cliBuilder._(longOpt: 'repo', args: 1, argName: 'repository name', 'Name of repository to ensure')
-        cliBuilder._(longOpt: 'description', args: 1, argName: 'licenses', 'Description of repository to ensure')
+        cliBuilder._(longOpt: 'description', args: 1, argName: 'text', 'Description of repository to ensure')
 
         cliBuilder.d(longOpt: 'dryrun', 'Only log operations')
 
@@ -95,9 +95,9 @@ class Cli {
             if (dryRun) {
                 logger.warn("Running in DRY RUN mode")
             }
-            configFileName = options.configFileName
+            configFileName = options.configFile
 
-            props = props.load(new File(configFileName).newDataInputStream())
+            props.load(new File(configFileName).newDataInputStream())
 
             repoPattern = props.get('repoPattern')
 
