@@ -24,11 +24,11 @@ class RepositoryHandleExtra extends RepositoryHandleImpl {
     @SuppressWarnings("GroovyAccessibility")
     PackageHandle createPkg(PackageDetails packageDetails) {
         def requestBody = [name: packageDetails.name, desc: packageDetails.description, labels: packageDetails.labels,
-                licenses: packageDetails.licenses]
+                licenses: packageDetails.licenses, public_download_numbers: true, vcs_url: packageDetails.vcsUrl,
+                website_url: packageDetails.websiteUrl, issue_tracker_url: packageDetails.issueTrackerUrl]
         if (packageDetails instanceof PackageDetailsExtra) {
-            requestBody['vcs_url'] = packageDetails.vcsUrl
-            requestBody['website'] = packageDetails.website
-            requestBody['issueTracker'] = packageDetails.issueTracker
+            requestBody['github_repo'] = packageDetails.githubRepo
+            requestBody['github_release_notes_file'] = packageDetails.githubReleaseNotes
         }
         bintrayHandle.post("packages/${this.owner().name()}/${this.name()}", requestBody)
         new PackageHandleImpl(bintrayHandle, this, packageDetails.name)

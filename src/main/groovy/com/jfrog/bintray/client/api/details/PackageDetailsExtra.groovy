@@ -11,45 +11,28 @@ package com.jfrog.bintray.client.api.details
  "rating_count": 8,
  "followers_count": 82,
  "created": "ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)",
+ "website_url": "http://jfrog.com",
+ "issue_tracker_url": "https://github.com/bintray/bintray-client-java/issues",
+ "github_repo": "", (publishers only)
+ "github_release_notes_file": "", (publishers only)
+ "public_download_numbers": false, (publishers only)
+ "public_stats": true, (publishers only)
+ "linked_to_repos": [],
  "versions": ["0.9", "1.0", "1.0.1", ...],
  "latest_version": "1.2.5",
  "updated": "ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)",
- "linked_to_repo": "the repo this package was linked to (relevant to search results)"
- "vcs_url": "https://github.com/bintray/bintray-client-java.git",
- "website": "https://github.com/bintray/bintray-client-java",
- "issue_tracker": "https://github.com/bintray/bintray-client-java/issues"
+ "vcs_url": "https://github.com/bintray/bintray-client-java.git"
  }
 
- I can't find the API for website, issue tracker, Github repo, Github release notes file, how to make the download numbers public
+
  */
 public class PackageDetailsExtra extends PackageDetails {
 
-    String vcsUrl
-    String website
-    String issueTracker
     String githubRepo
     String githubReleaseNotes
 
     PackageDetailsExtra(String name) {
         super(name)
-    }
-
-    public PackageDetailsExtra vcsUrl(String vcsUrl) {
-        this.vcsUrl = vcsUrl
-
-        return this
-    }
-
-    PackageDetailsExtra website(String website) {
-        this.website = website
-
-        this
-    }
-
-    PackageDetailsExtra issueTracker(String issueTracker) {
-        this.issueTracker = issueTracker
-
-        this
     }
 
     PackageDetailsExtra githubRepo(String repo) {
@@ -64,7 +47,7 @@ public class PackageDetailsExtra extends PackageDetails {
         this
     }
 
-    public String getName() {
+/*    public String getName() {
         return super.name
     }
 
@@ -79,4 +62,20 @@ public class PackageDetailsExtra extends PackageDetails {
     public List<String> getLabels() {
         return super.labels
     }
+
+    public String getVcsUrl() {
+        super.vcsUrl
+    }
+
+    public String getWebsiteUrl() {
+        super.websiteUrl
+    }
+
+    public String getIssueTrackerUrl() {
+        super.issueTrackerUrl
+    }
+
+    public getPublicDownloadNumbers() {
+        super.publicDownloadNumbers
+    }*/
 }
