@@ -22,28 +22,33 @@ import java.util.regex.Pattern
 class EnsureGithub {
     final static Logger logger = LoggerFactory.getLogger(EnsureGithub.class);
 
-    public static final String PULL_REQUEST_URL = 'https://netflixoss.ci.cloudbees.com/github-pull-request-hook/'
-    public static final String WEB_HOOK_URL = 'https://netflixoss.ci.cloudbees.com/github-webhook/'
+    public static final String PULL_REQUEST_URL = '/github-pull-request-hook/'
+    public static final String WEB_HOOK_URL = '/github-webhook/'
 
     boolean dryRun
     String oauthToken
     String orgName
     String orgContribTeamName
     String orgOwnersTeamName
+    boolean contribTeamNameStyleLowercase
     Collection<Pattern> repoRegexs
+
+    String jenkinsServer
 
     // Make it easier to intercept these calls
     GitHubClient client
     RepositoryServiceExtra repoService
     TeamService teamService
 
-    EnsureGithub(boolean dryRun, String oauthToken, String orgName, String orgContribTeamName, Collection<Pattern> repoRegexs = []) {
+    EnsureGithub(boolean dryRun, String oauthToken, String orgName, String orgContribTeamName, boolean contribTeamNameStyleLowercase = true, Collection<Pattern> repoRegexs = [], String jenkinsServer = '') {
         this.dryRun = dryRun
         this.oauthToken = oauthToken
         this.orgName = orgName
         this.orgContribTeamName = orgContribTeamName
+        this.contribTeamNameStyleLowercase = contribTeamNameStyleLowercase
         this.repoRegexs = repoRegexs
         this.orgOwnersTeamName = 'Owners' // Not sure this will ever be changed
+        this.jenkinsServer = jenkinsServer
 
         client = new GitHubClient()
         client.setOAuth2Token(oauthToken)
@@ -101,7 +106,7 @@ class EnsureGithub {
 
         def seedJobHash = hashJobName(seedJobName)
 
-        def http = new HTTPBuilder('https://netflixoss.ci.cloudbees.com')
+        def http = new HTTPBuilder(jenkinsServer)
         def html = http.post(path: "/job/$orgName/job/$seedJobName/build", query: [token: seedJobHash, delay: "0sec"])
     }
 
@@ -204,8 +209,8 @@ class EnsureGithub {
         // Establish WebHooks. Make a single call to get list of hooks
         List<RepositoryHook> hooks = repoService.getHooksExtra(repo)
         def managedHooks = []
-        managedHooks << ensureHook(repo, hooks, PULL_REQUEST_URL, ['pull_request'] as String[])
-        managedHooks << ensureHook(repo, hooks, WEB_HOOK_URL, ['push'] as String[])
+        managedHooks << ensureHook(repo, hooks, "${jenkinsServer}${PULL_REQUEST_URL}", ['pull_request'] as String[])
+        managedHooks << ensureHook(repo, hooks, "${jenkinsServer}${WEB_HOOK_URL}", ['push'] as String[])
 
         // Report hooks which we didn't configure
         def leftoverHooks = hooks - managedHooks
@@ -220,7 +225,8 @@ class EnsureGithub {
 
         // Establish teams
         def managedTeams = []
-        managedTeams << ensureRepoTeam(repo, teams, "${repo.name.toLowerCase()}-contrib", 'admin')
+        def repoContribName = contribTeamNameStyleLowercase ? "${repo.name.toLowerCase()}-contrib" : "${repo.name} Committers"
+        managedTeams << ensureRepoTeam(repo, teams, repoContribName, 'admin')
         //managedTeams << ensureRepoTeam(repo, teams, "${repo.name}-contrib", 'push')
         //ensureRepoTeam(teams, teamService, orgName, repo.name, "${repo.name}-admin", 'admin')
 
@@ -252,7 +258,7 @@ class EnsureGithub {
 
     // Create team for a single repository
     def ensureRepoTeam(Repository repository, List<Team> teams, String contribTeamName, String permission) {
-        def foundTeam = teams.find { Team team -> team.name.toLowerCase() == contribTeamName }
+        def foundTeam = teams.find { Team team -> team.name.toLowerCase() == contribTeamName.toLowerCase() }
         if (!foundTeam) {
             foundTeam = createTeam(contribTeamName, permission)
         } else {

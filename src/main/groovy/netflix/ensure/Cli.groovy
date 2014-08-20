@@ -1,7 +1,5 @@
 package netflix.ensure
 
-import ch.qos.logback.classic.LoggerContext
-import ch.qos.logback.core.util.StatusPrinter
 import groovy.transform.Canonical
 import org.eclipse.egit.github.core.Repository
 import org.slf4j.Logger
@@ -20,6 +18,7 @@ class Cli {
     String githubOauth
     String githubOrg
     String githubOrgContribName
+    boolean githubContribTeamNameStyleLowercase
 
     String bintrayUsername
     String bintrayApiKey
@@ -27,6 +26,8 @@ class Cli {
     String bintrayRepository
     List<String> bintrayLabels
     List<String> bintrayLicenses
+
+    String jenkinsServer
 
     boolean dryRun
     // TODO Entry point to create repo, and initialize it. Easyist called from a bot
@@ -36,7 +37,7 @@ class Cli {
      * https://github.com/nebula-plugins/nebula-plugins.github.io/wiki/New-Plugins
      */
     def ensure() {
-        EnsureGithub ensure = new EnsureGithub(dryRun, githubOauth, githubOrg, githubOrgContribName, getRepoRegexes())
+        EnsureGithub ensure = new EnsureGithub(dryRun, githubOauth, githubOrg, githubOrgContribName, githubContribTeamNameStyleLowercase, getRepoRegexes(), jenkinsServer)
         ensure.ensureOrg()
         // TODO Someway to ensure the users are in the correct groups, e.g. all netflix users in netflix-contrib
         // TODO Only look at public repos
@@ -57,7 +58,7 @@ class Cli {
     def ensureRepo(String repoName, String description) {
         assert repoName
 
-        EnsureGithub ensure = new EnsureGithub(dryRun, githubOauth, githubOrg, githubOrgContribName, getRepoRegexes())
+        EnsureGithub ensure = new EnsureGithub(dryRun, githubOauth, githubOrg, githubOrgContribName, githubContribTeamNameStyleLowercase, getRepoRegexes(), jenkinsServer)
         ensure.ensureRepo(repoName, description)
     }
 
@@ -105,6 +106,7 @@ class Cli {
             githubOauth = props.get('githubToken')
             githubOrg = props.get('githubOrg')
             githubOrgContribName = (props.get('githubOrgContribName')?:'contrib')
+            githubContribTeamNameStyleLowercase = (props.get('githubOrgContribNameStyle') == 'lowercase')
 
             // Bintray
             bintrayUsername = props.get('bintrayUser')
@@ -113,6 +115,9 @@ class Cli {
             bintrayRepository = props.get('bintrayRepository')
             bintrayLabels = props.get('bintrayLabels') ? props.get('bintrayLabels').tokenize(',') : []
             bintrayLicenses = props.get('bintrayLicenses') ? props.get('bintrayLicenses').tokenize(',') : []
+
+            // Cloudbees
+            jenkinsServer = props.get('jenkinsServer')
         }
 
         if (options.ensureRepo) {

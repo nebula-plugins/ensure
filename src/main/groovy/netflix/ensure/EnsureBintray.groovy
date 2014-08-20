@@ -1,13 +1,13 @@
 package netflix.ensure
 
 import com.jfrog.bintray.client.api.details.PackageDetails
+import com.jfrog.bintray.client.api.details.PackageDetailsExtra
 import com.jfrog.bintray.client.api.handle.Bintray
 import com.jfrog.bintray.client.api.handle.PackageHandle
 import com.jfrog.bintray.client.api.handle.RepositoryHandle
 import com.jfrog.bintray.client.api.handle.SubjectHandle
 import com.jfrog.bintray.client.api.model.Pkg
 import com.jfrog.bintray.client.impl.BintrayClient
-import com.jfrog.bintray.client.api.details.PackageDetailsExtra
 import com.jfrog.bintray.client.impl.handle.PackageHandleExtra
 import com.jfrog.bintray.client.impl.handle.PackageHandleImpl
 import com.jfrog.bintray.client.impl.handle.RepositoryHandleExtra
@@ -44,13 +44,13 @@ class EnsureBintray {
     RepositoryHandle repositoryHandle
     RepositoryHandleExtra repositoryHandleExtra
 
-    EnsureBintray(boolean dryRun, String username, String apiKey, String subject, String repository, List<String> labels, List<String> licenses) {
+    EnsureBintray(boolean dryRun, String username, String apiKey, String subject, String repository, List<String> labels, List<String> licenses, String githubOrg) {
         this.dryRun = dryRun
         this.username = username
         this.apiKey = apiKey
         this.subject = subject
         this.repository = repository
-        this.githubRepo = "nebula-plugins/${this.repository}".toString()
+        this.githubRepo = "${githubOrg}/${this.repository}".toString()
         this.website = "http://github.com/${this.githubRepo}".toString()
         this.issueTracker = "${this.website}/issues".toString()
 

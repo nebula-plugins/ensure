@@ -12,7 +12,7 @@ class EnsureGithubSpec extends Specification {
     Collection<Pattern> regexMock = []
     TeamService teamService = Mock()
     RepositoryServiceExtra repoService = Mock()
-    EnsureGithub ensure = new EnsureGithub(null, 'fakeOrg', 'fake-contrib', regexMock)
+    EnsureGithub ensure = new EnsureGithub(false, null, 'fakeOrg', 'fake-contrib', true, regexMock)
 
     def setup() {
         ensure.repoService = repoService

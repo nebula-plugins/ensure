@@ -25,7 +25,10 @@ class PackageHandleExtra extends PackageHandleImpl {
         this.pkg = impl.get()
     }
 
-
+    /**
+     * We're re-writing the PackageHandleImpl because their update leaves out vcs, website and issue tracker.
+     * And then we're using this call to update the attributes on the package too.
+     */
     @Override
     PackageHandle update(PackageDetails packageBuilder) {
         def allLabels = pkg.labels()
@@ -41,7 +44,6 @@ class PackageHandleExtra extends PackageHandleImpl {
             requestBody['website'] = packageBuilder.website
             requestBody['issue_tracker'] = packageBuilder.issueTracker
         }
-
 
         def commonPath = "${repositoryHandle.owner().name()}/${repositoryHandle.name()}/$name"
         // Instead of calling bintrayHandle.patch in PackageHandle.update
