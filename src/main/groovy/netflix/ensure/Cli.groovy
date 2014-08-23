@@ -44,7 +44,7 @@ class Cli {
 
         // Bintray
         List<Repository> repos = ensure.findPublicRepositories()
-        EnsureBintray ensureBintray = new EnsureBintray(dryRun, bintrayUsername, bintrayApiKey, bintraySubject, bintrayRepository, bintrayLabels, bintrayLicenses)
+        EnsureBintray ensureBintray = new EnsureBintray(dryRun, bintrayUsername, bintrayApiKey, bintraySubject, bintrayRepository, bintrayLabels, bintrayLicenses, githubOrg)
         ensureBintray.ensure(repos)
 
         // Cloudbees (job.dsl should take care of this)
