@@ -16,15 +16,15 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.0.13' // implementation
 
     compile 'org.eclipse.mylyn.github:org.eclipse.egit.github.core:2.1.5'
-    compile 'com.jfrog.bintray.client:bintray-client-java-impl:0.1.1'
+    compile 'com.jfrog.bintray.client:impl:0.2'
+    compile 'org.codehaus.groovy:groovy-backports-compat23:2.3.5' // impl uses Groovy 2.3
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1' // To get PATCH
     testCompile ('org.spockframework:spock-core:0.7-groovy-1.8') { exclude group: 'org.codehaus.groovy' }
     testCompile 'cglib:cglib-nodep:2.2.2' // For Mocking classes with Spock
+    testCompile 'org.objenesis:objenesis:2.1' // For Mocking PackageHandleImpl
 }
 
 task('ensure', type: EnsureTask) {
-    //args '--dryrun'
-    //debug true
 }
 
 task('ensureDry', type: EnsureTask) {
@@ -54,11 +54,12 @@ tasks.withType(EnsureTask) {
         if (!ensureConfigFile.exists()) {
             throw new RuntimeException("${project.ensureConfig} does not exist")
         }
+
+        args '--configFile', project.ensureConfig
     }
     main 'netflix.ensure.Cli'
     classpath = sourceSets.main.runtimeClasspath
 
-    args '--configFile', project.ensureConfig
     if (project.hasProperty('dryRun')) {
         args '--dryrun'
     }
