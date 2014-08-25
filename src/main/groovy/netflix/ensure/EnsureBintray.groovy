@@ -76,7 +76,7 @@ class EnsureBintray {
     }
 
     def ensurePackage(List<String> packageNames, Repository repo) {
-        PackageDetails ideal = packageFromRepo(repo)
+        PackageDetailsExtra ideal = packageFromRepo(repo)
         PackageHandle handle
         if (!packageNames.contains(repo.name)) {
             logger.info("Creating package ${ideal.name}")
@@ -89,15 +89,24 @@ class EnsureBintray {
             // Compare fields to see if an update is needed.
             // TODO Licenses is missing from Pkg.
             // TODO Vcs isn't available.
+            // TODO Website isn't available on Pkg
 
             handle = repositoryHandle.pkg(repo.name)
             Pkg pkg = handle.get()
             logger.debug("Inspecting package ${pkg.name()}")
-            if ( pkg.description() != repo.description || !pkg.labels().containsAll(labels) ) {
+            boolean fieldsDiff = pkg.description() != repo.description || !pkg.labels().containsAll(labels)
+
+            def handleExtra = new PackageHandleExtra( (PackageHandleImpl) handle)
+            def attrs = handleExtra.attributes()
+            boolean attrDiff = attrs['website'] != ideal.website ||
+                    attrs['issues_tracker'] != ideal.issueTracker ||
+                    attrs['github_repo'] != ideal.githubRepo ||
+                    attrs['vcs_url'] != ideal.vcsUrl ||
+                    attrs['github_release_notes'] != ideal.githubReleaseNotes
+            if ( fieldsDiff || attrDiff ) {
                 logger.info("Updating ${pkg.name()}")
                 // Ridiculous way to get a handle when we have the real object
                 if (!dryRun) {
-                    def handleExtra = new PackageHandleExtra( (PackageHandleImpl) handle)
                     handleExtra.update(ideal)
                 }
             }

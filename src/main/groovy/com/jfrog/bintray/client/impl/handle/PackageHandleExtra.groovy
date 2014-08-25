@@ -65,4 +65,16 @@ class PackageHandleExtra extends PackageHandleImpl {
 
         this
     }
+
+    Map<String, List<String>> attributes() {
+        def data = bintrayHandle.get("packages/${repositoryHandle.owner().name()}/${repositoryHandle.name()}/$name/attributes").data
+        createAttributesFromJsonMap(data)
+    }
+
+    private static Map<String, List<String>> createAttributesFromJsonMap(data) {
+        data.collectEntries {
+            [it.name, it.values]
+        }
+    }
+
 }
