@@ -32,9 +32,7 @@ class EnsureBintray {
     String apiKey
     String subject
     String repository
-    String website
-    String issueTracker
-    String githubRepo
+    String githubOrg
     String githubReleaseNotes = 'CHANGELOG.md'
     List<String> labels
     List<String> licenses
@@ -50,9 +48,7 @@ class EnsureBintray {
         this.apiKey = apiKey
         this.subject = subject
         this.repository = repository
-        this.githubRepo = "${githubOrg}/${this.repository}".toString()
-        this.website = "http://github.com/${this.githubRepo}".toString()
-        this.issueTracker = "${this.website}/issues".toString()
+        this.githubOrg = githubOrg
 
         this.labels = labels
         this.licenses = licenses
@@ -111,6 +107,10 @@ class EnsureBintray {
     }
 
     PackageDetails packageFromRepo(Repository repo) {
+        def githubRepo = "${githubOrg}/${repo.name}".toString()
+        def website = "http://github.com/${githubRepo}".toString()
+        def issueTracker = "${website}/issues".toString()
+
         def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).website(website).issueTracker(issueTracker).githubRepo(githubRepo)
                 .githubReleaseNotes(githubReleaseNotes).description(repo.description).labels(labels).licenses(licenses)
         ideal
