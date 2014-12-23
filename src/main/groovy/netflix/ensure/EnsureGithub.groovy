@@ -9,6 +9,7 @@ import org.eclipse.egit.github.core.RepositoryHook
 import org.eclipse.egit.github.core.Team
 import org.eclipse.egit.github.core.client.GitHubClient
 import org.eclipse.egit.github.core.client.GsonUtils
+import org.eclipse.egit.github.core.service.ContentsService
 import org.eclipse.egit.github.core.service.TeamService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -203,6 +204,8 @@ class EnsureGithub {
     List<Repository> matchRepositories(List<Repository> repositories) {
         repositories.findAll { Repository repo ->
             matchRepository(repo)
+        }.findAll { Repository repo ->
+            repo.name == 'netflixoss-build-infrastructure'
         }
     }
 

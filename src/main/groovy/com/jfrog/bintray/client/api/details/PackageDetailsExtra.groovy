@@ -47,7 +47,7 @@ public class PackageDetailsExtra extends PackageDetails {
         this
     }
 
-/*    public String getName() {
+    public String getName() {
         return super.name
     }
 
@@ -77,5 +77,5 @@ public class PackageDetailsExtra extends PackageDetails {
 
     public getPublicDownloadNumbers() {
         super.publicDownloadNumbers
-    }*/
+    }
 }

@@ -121,7 +121,7 @@ class EnsureBintray {
         def website = "http://github.com/${githubRepo}".toString()
         def issueTracker = "${website}/issues".toString()
 
-        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).website(website).issueTracker(issueTracker).githubRepo(githubRepo)
+        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).websiteUrl(website).issueTrackerUrl(issueTracker).githubRepo(githubRepo)
                 .githubReleaseNotes(githubReleaseNotes).description(repo.description).labels(labels).licenses(licenses)
         
         ideal
