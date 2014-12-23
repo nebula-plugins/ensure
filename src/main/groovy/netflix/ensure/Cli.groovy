@@ -43,7 +43,8 @@ class Cli {
         // TODO Only look at public repos
 
         // Bintray
-        List<Repository> repos = ensure.findPublicRepositories()
+        List<Repository> publicRepos = ensure.findPublicRepositoriesMatchingGradlePattern(/apply plugin: ('|")nebula.netflixoss('|")/)
+
         EnsureBintray ensureBintray = new EnsureBintray(dryRun, bintrayUsername, bintrayApiKey, bintraySubject, bintrayRepository, bintrayLabels, bintrayLicenses, githubOrg)
         ensureBintray.ensure(repos)
 
