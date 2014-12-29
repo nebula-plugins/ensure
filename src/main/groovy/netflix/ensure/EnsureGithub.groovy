@@ -11,6 +11,7 @@ import org.eclipse.egit.github.core.client.GitHubClient
 import org.eclipse.egit.github.core.client.GsonUtils
 import org.eclipse.egit.github.core.service.ContentsService
 import org.eclipse.egit.github.core.service.TeamService
+import org.eclipse.egit.github.core.util.EncodingUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -171,10 +172,11 @@ class EnsureGithub {
 
     List<Repository> findPublicRepositoriesFulfillingPredicates(Collection<Closure<Boolean>> predicates) {
         def repos = findPublicRepositories()
-        println repos.collect { it.name }
         if (predicates) {
             predicates.each { predicate ->
-                repos = repos.findAll { predicate(it) }
+                repos = repos.findAll {
+                    predicate(it)
+                }
             }
         }
 
@@ -190,8 +192,6 @@ class EnsureGithub {
                 def content = allContents.iterator().next()
                 def bytes = EncodingUtils.fromBase64(content.content)
                 String str = new String(bytes, 'UTF-8')
-                println str
-                println pattern
                 return pattern ? (str =~ pattern) as Boolean : true
             } catch (Exception fnfe) { // RequestException
                 return false
