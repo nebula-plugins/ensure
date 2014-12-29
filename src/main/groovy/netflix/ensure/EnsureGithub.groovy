@@ -171,7 +171,7 @@ class EnsureGithub {
 
     List<Repository> findPublicRepositoriesFulfillingPredicates(Collection<Closure<Boolean>> predicates) {
         def repos = findPublicRepositories()
-
+        println repos.collect { it.name }
         if (predicates) {
             predicates.each { predicate ->
                 repos = repos.findAll { predicate(it) }
@@ -190,6 +190,8 @@ class EnsureGithub {
                 def content = allContents.iterator().next()
                 def bytes = EncodingUtils.fromBase64(content.content)
                 String str = new String(bytes, 'UTF-8')
+                println str
+                println pattern
                 return pattern ? (str =~ pattern) as Boolean : true
             } catch (Exception fnfe) { // RequestException
                 return false
