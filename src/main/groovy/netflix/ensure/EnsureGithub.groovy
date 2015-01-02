@@ -206,8 +206,6 @@ class EnsureGithub {
     List<Repository> matchRepositories(List<Repository> repositories) {
         repositories.findAll { Repository repo ->
             matchRepository(repo)
-        }.findAll { Repository repo ->
-            repo.name == 'netflixoss-build-infrastructure'
         }
     }
 
