@@ -9,7 +9,9 @@ import org.eclipse.egit.github.core.RepositoryHook
 import org.eclipse.egit.github.core.Team
 import org.eclipse.egit.github.core.client.GitHubClient
 import org.eclipse.egit.github.core.client.GsonUtils
+import org.eclipse.egit.github.core.service.ContentsService
 import org.eclipse.egit.github.core.service.TeamService
+import org.eclipse.egit.github.core.util.EncodingUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -38,6 +40,7 @@ class EnsureGithub {
     // Make it easier to intercept these calls
     GitHubClient client
     RepositoryServiceExtra repoService
+    ContentsService contentsService
     TeamService teamService
 
     EnsureGithub(boolean dryRun, String oauthToken, String orgName, String orgContribTeamName, boolean contribTeamNameStyleLowercase = true, Collection<Pattern> repoRegexs = [], String jenkinsServer = '') {
@@ -53,6 +56,7 @@ class EnsureGithub {
         client = new GitHubClient()
         client.setOAuth2Token(oauthToken)
         repoService = new RepositoryServiceExtra(client)
+        contentsService = new ContentsService(client)
         teamService = new TeamService(client)
     }
 
@@ -159,11 +163,44 @@ class EnsureGithub {
         logger.info("Github rate: ${client.remainingRequests}/${client.requestLimit}")
     }
 
-    public List<Repository> findPublicRepositories() {
+    List<Repository> findPublicRepositories() {
         def allRepositories = repoService.getOrgRepositories(orgName)
         List<Repository> repositories = matchRepositories(allRepositories)
         List<Repository> publicRepositories = repositories.findAll { !it.private }
         return publicRepositories
+    }
+
+    List<Repository> findPublicRepositoriesFulfillingPredicates(Collection<Closure<Boolean>> predicates) {
+        def repos = findPublicRepositories()
+        if (predicates) {
+            predicates.each { predicate ->
+                repos = repos.findAll {
+                    predicate(it)
+                }
+            }
+        }
+
+        repos
+    }
+
+    List<Repository> findPublicRepositoriesMatchingGradlePattern(String pattern) {
+        def predicates = []
+
+        def checkGradle = { Repository repo ->
+            try {
+                def allContents = contentsService.getContents(repo, "build.gradle")
+                def content = allContents.iterator().next()
+                def bytes = EncodingUtils.fromBase64(content.content)
+                String str = new String(bytes, 'UTF-8')
+                return pattern ? (str =~ pattern) as Boolean : true
+            } catch (Exception fnfe) { // RequestException
+                return false
+            }
+        }
+
+        predicates << checkGradle
+        
+        findPublicRepositoriesFulfillingPredicates(predicates)
     }
 
     List<Repository> matchRepositories(List<Repository> repositories) {

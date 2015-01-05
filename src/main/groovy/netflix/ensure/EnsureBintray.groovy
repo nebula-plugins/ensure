@@ -72,7 +72,6 @@ class EnsureBintray {
             logger.info("Ensuring repo ${repo.name}")
             ensurePackage(names, repo)
         }
-
     }
 
     def ensurePackage(List<String> packageNames, Repository repo) {
@@ -86,33 +85,35 @@ class EnsureBintray {
                 handle = repositoryHandleExtra.createPkg(ideal)
             }
         } else {
-            // Compare fields to see if an update is needed.
-            // TODO Licenses is missing from Pkg.
-            // TODO Vcs isn't available.
-            // TODO Website isn't available on Pkg
-
             handle = repositoryHandle.pkg(repo.name)
             Pkg pkg = handle.get()
             logger.debug("Inspecting package ${pkg.name()}")
-            boolean fieldsDiff = pkg.description() != repo.description || !pkg.labels().containsAll(labels)
 
             def handleExtra = new PackageHandleExtra( (PackageHandleImpl) handle)
-            def attrs = handleExtra.attributes()
-            boolean attrDiff = attrs['website'] != ideal.website ||
-                    attrs['issues_tracker'] != ideal.issueTracker ||
-                    attrs['github_repo'] != ideal.githubRepo ||
-                    attrs['vcs_url'] != ideal.vcsUrl ||
-                    attrs['github_release_notes'] != ideal.githubReleaseNotes
-            if ( fieldsDiff || attrDiff ) {
+            if ( isPackageOutOfDate(pkg, repo) || areAttributesDifferent(handleExtra.attributes(), ideal) ) {
                 logger.info("Updating ${pkg.name()}")
-                // Ridiculous way to get a handle when we have the real object
                 if (!dryRun) {
                     handleExtra.update(ideal)
                 }
             }
         }
-        return handle
+        
+        handle
+    }
 
+    boolean isPackageOutOfDate(Pkg pkg, Repository repo) {
+        def description = pkg.description != repo.description
+        def labels = pkg.labels().containsAll(labels)
+
+        description || labels
+    }
+
+    boolean areAttributesDifferent(attrs, PackageDetailsExtra ideal) {
+        attrs['website_url'] != ideal.website ||
+        attrs['issue_tracker_url'] != ideal.issueTracker ||
+        attrs['github_repo'] != ideal.githubRepo ||
+        attrs['vcs_url'] != ideal.vcsUrl ||
+        attrs['github_release_notes_file'] != ideal.githubReleaseNotes
     }
 
     PackageDetails packageFromRepo(Repository repo) {
@@ -120,8 +121,9 @@ class EnsureBintray {
         def website = "http://github.com/${githubRepo}".toString()
         def issueTracker = "${website}/issues".toString()
 
-        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).website(website).issueTracker(issueTracker).githubRepo(githubRepo)
+        def ideal = new PackageDetailsExtra(repo.name).vcsUrl(repo.gitUrl).websiteUrl(website).issueTrackerUrl(issueTracker).githubRepo(githubRepo)
                 .githubReleaseNotes(githubReleaseNotes).description(repo.description).labels(labels).licenses(licenses)
+        
         ideal
     }
 }

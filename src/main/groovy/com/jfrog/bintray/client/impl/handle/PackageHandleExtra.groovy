@@ -38,30 +38,17 @@ class PackageHandleExtra extends PackageHandleImpl {
             }
         }
         def requestBody = [desc: packageBuilder.description, labels: allLabels,
-                licenses: packageBuilder.licenses]
+                licenses: packageBuilder.licenses, public_download_numbers: true, vcs_url: packageDetails.vcsUrl,
+                website_url: packageDetails.websiteUrl, issue_tracker_url: packageDetails.issueTrackerUrl]
         if (packageBuilder instanceof PackageDetailsExtra) {
-            requestBody['vcs_url'] = packageBuilder.vcsUrl
-            requestBody['website'] = packageBuilder.website
-            requestBody['issue_tracker'] = packageBuilder.issueTracker
+            requestBody['github_repo'] = packageBuilder.githubRepo
+            requestBody['github_release_notes_file'] = packageBuilder.githubReleaseNotes
         }
 
         def commonPath = "${repositoryHandle.owner().name()}/${repositoryHandle.name()}/$name"
         // Instead of calling bintrayHandle.patch in PackageHandle.update
         def path = "packages/$commonPath"
         bintrayHandle.restClient.patch([path: path, body: requestBody])
-
-        // set attributes
-        def attributePath = "/packages/$commonPath/attributes"
-
-        def attributeBody = [[name: 'public_download_numbers', values: [true], type: 'boolean']]
-        if (packageBuilder instanceof PackageDetailsExtra) {
-            attributeBody << [name: 'website', values: [packageBuilder.website], type: 'string']
-            attributeBody << [name: 'issue_tracker', values: [packageBuilder.issueTracker], type: 'string']
-            attributeBody << [name: 'vcs_url', values: [packageBuilder.vcsUrl], type: 'string']
-            attributeBody << [name: 'github_repo', values: [packageBuilder.githubRepo], type: 'string']
-            attributeBody << [name: 'github_release_notes', values: [packageBuilder.githubReleaseNotes], type: 'string']
-        }
-        bintrayHandle.restClient.patch([path: attributePath, body: attributeBody])
 
         this
     }

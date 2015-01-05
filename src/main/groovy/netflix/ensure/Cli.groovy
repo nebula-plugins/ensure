@@ -38,12 +38,12 @@ class Cli {
      */
     def ensure() {
         EnsureGithub ensure = new EnsureGithub(dryRun, githubOauth, githubOrg, githubOrgContribName, githubContribTeamNameStyleLowercase, getRepoRegexes(), jenkinsServer)
-        ensure.ensureOrg()
+        //ensure.ensureOrg()
         // TODO Someway to ensure the users are in the correct groups, e.g. all netflix users in netflix-contrib
         // TODO Only look at public repos
 
         // Bintray
-        List<Repository> repos = ensure.findPublicRepositories()
+        List<Repository> repos = ensure.findPublicRepositoriesMatchingGradlePattern(/apply plugin: ('|")nebula.netflixoss('|")/)
         EnsureBintray ensureBintray = new EnsureBintray(dryRun, bintrayUsername, bintrayApiKey, bintraySubject, bintrayRepository, bintrayLabels, bintrayLicenses, githubOrg)
         ensureBintray.ensure(repos)
 
