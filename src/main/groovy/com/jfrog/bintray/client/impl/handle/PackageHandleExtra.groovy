@@ -38,8 +38,8 @@ class PackageHandleExtra extends PackageHandleImpl {
             }
         }
         def requestBody = [desc: packageBuilder.description, labels: allLabels,
-                licenses: packageBuilder.licenses, public_download_numbers: true, vcs_url: packageDetails.vcsUrl,
-                website_url: packageDetails.websiteUrl, issue_tracker_url: packageDetails.issueTrackerUrl]
+                licenses: packageBuilder.licenses, public_download_numbers: true, vcs_url: packageBuilder.vcsUrl,
+                website_url: packageBuilder.websiteUrl, issue_tracker_url: packageBuilder.issueTrackerUrl]
         if (packageBuilder instanceof PackageDetailsExtra) {
             requestBody['github_repo'] = packageBuilder.githubRepo
             requestBody['github_release_notes_file'] = packageBuilder.githubReleaseNotes
