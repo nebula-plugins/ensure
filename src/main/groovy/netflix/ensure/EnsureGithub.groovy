@@ -166,8 +166,8 @@ class EnsureGithub {
     List<Repository> findPublicRepositories() {
         def allRepositories = repoService.getOrgRepositories(orgName)
         List<Repository> repositories = matchRepositories(allRepositories)
-        //List<Repository> publicRepositories = repositories.findAll { !it.private }
-        return repositories
+        List<Repository> publicRepositories = repositories.findAll { !it.private }
+        return publicRepositories
     }
 
     List<Repository> findPublicRepositoriesFulfillingPredicates(Collection<Closure<Boolean>> predicates) {
